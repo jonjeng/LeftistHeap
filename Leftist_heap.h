@@ -17,6 +17,7 @@
 
 #include "Leftist_node.h"
 #include <cmath>
+#include "Dynamic_queue.h"
 
 template <typename Type>
 class Leftist_heap {
@@ -60,11 +61,45 @@ heap_size( 0 ) {
 template <typename Type>
 Leftist_heap<Type>::Leftist_heap( Leftist_heap const &heap ):
 root_node( nullptr ),
-heap_size( 0 ) {
+heap_size( heap.heap_size ) {
 	// Traverses through the argument heap and pushes the entries
 	// into this heap--you may use whatever traversal you want
     //  You may use any linked list, stack or queue data structure from either Project 1 or 2 to perform the traversal of the tree that is being copied. If you wish, you may use the Standard Template Library (STL) stack or queue classes. 
-    // 
+    //
+    if (heap.heap_size == 0) {
+        heap_size = 0;
+        return;
+    }
+    else if (heap.heap_size == 1) {
+        Leftist_node<Type> *newNode = new Leftist_node<Type>;
+        newNode = heap.root_node;
+        root_node = newNode;
+    }
+    // Copy heap parameter into an array (arrayCopy) by breadth-first traversal
+    else {
+        /*
+         put root node onto a queue
+         while the queue is not empty
+         dequeue the next node and visit it
+         enqueue left child
+         enqueue right child
+         */
+        Dynamic_queue<Type> queueCopy(heap.heap_size/2)
+        Leftist_node<Type> *curr = heap.root_node;
+        queueCopy.enqueue(curr);
+        while (!queueCopy.empty()) {
+            curr = queueCopy.head();
+            push(queueCopy.dequeue());
+            if (curr->left_tree != nullptr) {
+                queueCopy.enqueue(curr->left_tree);
+            }
+            if (curr->right_tree != nullptr) {
+                queueCopy.enqueue(curr->right_tree);
+            }
+        }
+        
+    }
+    
 }
 
 template <typename Type>
@@ -130,8 +165,11 @@ Type Leftist_heap::top() const {
 template <typename Type>
 void Leftist_heap::push(const Type &obj) {
     // Insert the new element into the heap by creating a new leftist node and calling push on the root node using root_node as a second argument.
-    Leftist_node<Type> *new_node(obj);
-    root_node->push(new_node, root_node);
+    Leftist_node<Type> *new_node = new Leftist_node<Type>;
+    new_node.push(obj, root_node);
+    //
+    //calling obj is new_node - does code have to change to reflect this?
+    //
     
     // Increment the heap size.
     heap_size++;
@@ -140,6 +178,11 @@ void Leftist_heap::push(const Type &obj) {
 template <typename Type>
 Type Leftist_heap::pop() {
     // Pop the least element in the heap and delete its node. If the tree is empty, this function throws an underflow exception. Otherwise, the left sub-tree of the root node is made the root node and the right-sub tree of the original root node is pushed into the new root node. Return the element in the popped node and decrement the heap size. (O(ln(n)))
+    
+    /******************************************************
+     
+     ASSUMES ORDERED BST - MUST REVISE IF INVALID
+     ******************************************************/
     
     // If the heap is size 0, no elements can be popped so throw an underflow exception.
     // try {
@@ -157,24 +200,36 @@ Type Leftist_heap::pop() {
     // Otherwise, the heap has size greater than 1.
     int height = std::ceil(std::log2(heap_size));
     
-    // Traverse to the node with the smallest element and that node's parent
-    Leftist_node<Type> *curr = root_node->left();
+    // Traverse to the parent of the rightmost leaf
+    Leftist_node<Type> *curr = root_node;
     Leftist_node<Type> *parent = root_node;
-    for (int i = 1; i < height; i++) {
+    while(curr->null_path_length() > 1) {
         parent = curr;
-        curr = curr->left();
+        if (curr->right_tree->null_path_length() >= curr->left_tree->null_path_length())
+            curr = curr->right_tree;
+        else /* if (curr->left_tree->null_path_length() > curr->right_tree->null_path_length()) */
+            curr = curr->left_tree;
     }
+    parent = curr;
+    if (curr->right_tree != nullptr) // The rightmost leaf is the right child of its parent
+        curr = curr->right_tree;
+    else // The rightmost leaf is the left child of its parent
+        curr = curr->left_tree
     
     // Delete the node and update its parent
     int result = curr->retrieve();
     delete curr;
     parent->left_node = nullptr;
     
+    Leftist_node<Type> *leftChild = root_node->left_tree;
+    Leftist_node<Type> *rightChild = root_node->right_tree;
+    
     // The left sub-tree of the root node is made the root node and the right-sub tree of the original root node is pushed into the new root node.
+    
         // This should only be done if the root node (greatest element) is popped, so it's unnecessary/irrelevant, right?
     
     // std::ceil(std::log(heap_size))
-    
+    return result;
 }
 
 template <typename Type>
