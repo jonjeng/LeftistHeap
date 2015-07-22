@@ -141,6 +141,16 @@ int Leftist_heap::null_path_length() const {
 }
 
 template <typename Type>
+Type Leftist_heap::top() const {
+    // Return the element at the top of the heap. If the tree is empty, this function throws an underflow exception. (O(1))
+    // try {
+    if (heap_size == 0)
+        throw underflow();
+    // } catch { std::cout << "Error: the heap is empty and there is no top element!\n"; return; }
+    return root_node;
+}
+
+template <typename Type>
 int Leftist_heap::count(const Type &subj) const {
     // Return the number of instances of the argument in the heap. (O(n))
     int count = 0;
@@ -153,17 +163,13 @@ int Leftist_heap::count(const Type &subj) const {
 }
 
 template <typename Type>
-Type Leftist_heap::top() const {
-    // Return the element at the top of the heap. If the tree is empty, this function throws an underflow exception. (O(1))
-    // try {
-    if (heap_size == 0)
-        throw underflow();
-    // } catch { std::cout << "Error: the heap is empty and there is no top element!\n"; return; }
-    return root_node;
-}
-
-template <typename Type>
 void Leftist_heap::push(const Type &obj) {
+    
+    /******************************************************
+     
+     MUST FIX
+     ******************************************************/
+    
     // Insert the new element into the heap by creating a new leftist node and calling push on the root node using root_node as a second argument.
     Leftist_node<Type> *new_node = new Leftist_node<Type>;
     new_node.push(obj, root_node);
