@@ -11,6 +11,7 @@
 #ifndef LEFTIST_NODE_H
 #define LEFTIST_NODE_H
 
+#include "Dynamic_queue.h"
 #include <algorithm>
 // You may use std::swap and std::min
 
@@ -97,6 +98,12 @@ int Leftist_node<Type>::null_path_length() const {
 
 template <typename Type>
 void Leftist_node<Type>::push(Leftist_node *heap_to_insert, Leftist_node *&ptr_to_this) const {
+    /*// Only one node can be inserted at a time
+    if (heap_to_insert->heap_null_path_length > 0) {
+        std::cout << "Error: only one node can be inserted at a time\n";
+        return;
+    }*/
+    
     // If the heap to insert is null, return.
     if (heap_to_insert == nullptr)
         return;
@@ -105,26 +112,49 @@ void Leftist_node<Type>::push(Leftist_node *heap_to_insert, Leftist_node *&ptr_t
     if (this == nullptr) {
         this = heap_to_insert;
     }
-    else if (element <= heap_to_insert->element) {
-        // If the current node is storing a value <= the value stored in the root of the new heap, push the new node onto the right sub-tree with right_tree.
-        push(heap_to_insert, right_tree);
+    
+    // If the smallest element in the original heap (ptr_to_this), recursively merge right subtree of original heap with new heap (heap_to_insert)
+    else if (ptr_to_this->element <= heap_to_insert->element) {
+        Leftist_node<Type> curr = ptr_to_this;
+        while (curr->right_tree != nullptr)
+            curr = curr->right_tree;
+        curr->right_tree = heap_to_insert;
+        curr->right_tree->heap_null_path_length + heap_to_insert->null_path_length + 1;
         
-        // Update the null-path length
-        heap_null_path_length = 1 + std::min(null_path_length(left_tree), null_path_length(right_tree));
+        // Check if right subtree of curr has larger null path length than left subtree. If so, then swap right tree and left tree.
+        if (curr->left_tree) {
+            if (curr->right_tree->heap_null_path_length > curr->left_tree->heap_null_path_length)
+                std::swap(curr->right_tree, curr->left_tree);
+        }
         
-        // If the left-sub-tree has a smaller null-path length than the right sub-tree, swap the two sub-trees
-        if (left_tree->null_path_length() < right_tree->null_path_length()) {
-            std::swap(left_tree, right_tree)
+        // Check if right subtree of root node has larger null path length than left subtree. If so, then swap right tree and left tree.
+        if (ptr_to_this->left_tree) {
+            if (ptr_to_this->right_tree->heap_null_path_length > ptr_to_this->left_tree->heap_null_path_length)
+                std::swap(ptr_to_this->right_tree, ptr_to_this->left_tree);
         }
     }
-    else /* if (element > heap_to_insert->element) */ {
-        //  Otherwise, set ptr_to_this to be the heap_to_insert and push this node into the new heap (with an appropriate second argument).
-        std::swap(ptr_to_this, heap_to_insert);
-        ptr_to_this->push(heap_to_insert, left_tree);
+    
+    // if smallest element is in the new heap (heap_to_insert), recursively merge right subtree of new heap with original heap (ptr_to_this)
+    else if (heap_to_insert->element < ptr_to_this->element) {
+        Leftist_node<Type> curr = heap_to_insert;
+        while (curr->right_tree != nullptr)
+            curr = curr->right_tree;
+        curr->right_tree = ptr_to_this;
+        curr->right_tree->heap_null_path_length + heap_to_insert->null_path_length + 1;
         
-        // Update the null-path length
-        ptr_to_this->heap_null_path_length = 1 + std::min(null_path_length(ptr_to_this->left_tree), null_path_length(ptr_to_this->right_tree));
+        // If the curr's right subtree has larger null path length than its left subtree, swap the right subtree with its left subtree
+        if (curr->left_tree) {
+            if (curr->right_tree->heap_null_path_length > curr->left_tree->heap_null_path_length)
+                std::swap(curr->right_tree, curr->left_tree);
+        }
+        
+        // Check if right subtree of root node has larger null path length than left subtree. If so, then swap right tree and left tree.
+        if (heap_to_insert->left_tree) {
+            if (heap_to_insert->right_tree->heap_null_path_length > heap_to_insert->left_tree->heap_null_path_length)
+                std::swap(heap_to_insert->right_tree, heap_to_insert->left_tree);
+        }
     }
+    
 }
 
 template <typename Type>
