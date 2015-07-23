@@ -71,9 +71,7 @@ heap_size( heap.heap_size ) {
         return;
     }
     else if (heap.heap_size == 1) {
-        Leftist_node<Type> *newNode = new Leftist_node<Type>;
-        newNode = heap.root_node;
-        root_node = newNode;
+        root_node = heap.root_node;
     }
     // Copy heap parameter into an array (arrayCopy) by breadth-first traversal
     else {
@@ -84,17 +82,18 @@ heap_size( heap.heap_size ) {
          enqueue left child
          enqueue right child
          */
-        Dynamic_queue<Type> queueCopy(heap.heap_size/2)
+        Dynamic_queue<Leftist_node<Type> *> queueCopy(heap.heap_size/2);
         Leftist_node<Type> *curr = heap.root_node;
         queueCopy.enqueue(curr);
         while (!queueCopy.empty()) {
-            curr = queueCopy.head();
-            push(queueCopy.dequeue());
-            if (curr->left_tree != nullptr) {
-                queueCopy.enqueue(curr->left_tree);
+            curr = queueCopy.dequeue();
+            push(curr ->retrieve());
+            
+            if(curr->left()!=NULL){
+                queueCopy.enqueue(curr->left());
             }
-            if (curr->right_tree != nullptr) {
-                queueCopy.enqueue(curr->right_tree);
+            if(curr->right()!=NULL){
+                queueCopy.enqueue(curr->right());
             }
         }
         
@@ -121,7 +120,7 @@ Leftist_heap<Type> &Leftist_heap<Type>::operator=( Leftist_heap<Type> rhs ) {
 }
 
 template <typename Type>
-bool Leftist_heap::empty() const {
+bool Leftist_heap<Type>::empty() const {
     // Returns true if the heap is empty, false otherwise.
     if (heap_size == 0)
         return true;
@@ -129,51 +128,54 @@ bool Leftist_heap::empty() const {
 }
 
 template <typename Type>
-int Leftist_heap::size() const {
+int Leftist_heap<Type>::size() const {
     // Returns the number of nodes in the heap.
     return heap_size;
 }
 
 template <typename Type>
-int Leftist_heap::null_path_length() const {
+int Leftist_heap<Type>::null_path_length() const {
     // Returns the null-path length of the root node. (O(1))
-    return root_node->null_path_length();
+    if (root_node == nullptr)
+        return -1;
+    else
+        return root_node->null_path_length();
 }
 
 template <typename Type>
-Type Leftist_heap::top() const {
+Type Leftist_heap<Type>::top() const {
     // Return the element at the top of the heap. If the tree is empty, this function throws an underflow exception. (O(1))
     // try {
     if (heap_size == 0)
         throw underflow();
     // } catch { std::cout << "Error: the heap is empty and there is no top element!\n"; return; }
-    return root_node;
+    return root_node->retrieve();
 }
 
 template <typename Type>
-int Leftist_heap::count(const Type &subj) const {
+int Leftist_heap<Type>::count(const Type &subj) const {
     // Return the number of instances of the argument in the heap. (O(n))
     int count = 0;
-    if (root_node->element == subj)
+    if (root_node->retrieve() == subj)
         count++;
     // Make use of Leftist_node<Type>::count(const type &subj) to traverse the subtrees accordingly.
-    count += root_node->left_tree->count(subj);
-    count += root_node->right_tree->count(subj);
+    count += root_node->left()->count(subj);
+    count += root_node->right()->count(subj);
     return false;
 }
 
 template <typename Type>
-void Leftist_heap::push(const Type &obj) {
+void Leftist_heap<Type>::push(const Type &obj) {
     // Insert the new element into the heap by creating a new leftist node and calling push on the root node using root_node as a second argument.
     Leftist_node<Type> *new_node = new Leftist_node<Type>(obj);
-    root_node.push(new_node, root_node);
+    root_node->push(new_node, root_node);
     
     // Increment the heap size.
     heap_size++;
 }
 
 template <typename Type>
-Type Leftist_heap::pop() {
+Type Leftist_heap<Type>::pop() {
     // Remove root, leaving two subtrees (root's left_tree and right_tree).
             // Merge the two trees - find the subtree with the min element (which subtree's root node is smaller).
                 // Recursively merge the right subtree (tree x) of the heap (that has the smallest element) with the rightmost element of the left heap. (place the rightmost element (node n) of the other tree into tree x)
@@ -201,8 +203,8 @@ Type Leftist_heap::pop() {
     }
     
     // Otherwise, the heap has size greater than 1
-    Leftist_node<Type> *leftChild = root_node->left_tree;
-    Leftist_node<Type> *rightChild = root_node->right_tree;
+    Leftist_node<Type> *leftChild = root_node->left();
+    Leftist_node<Type> *rightChild = root_node->right();
     
     Type result = root_node->retrieve();
     delete root_node;
@@ -211,7 +213,7 @@ Type Leftist_heap::pop() {
     root_node = leftChild;
     
     // The right-subtree of the original root node is pushed into the new root node
-    root_node.push(rightChild, root_node);
+    root_node->push(rightChild, root_node);
     
     // Decrement heap_size to reflect the poppinng
     heap_size--;
@@ -221,9 +223,9 @@ Type Leftist_heap::pop() {
 }
 
 template <typename Type>
-void Leftist_heap::clear() {
+void Leftist_heap<Type>::clear() {
     // Call clear on the root node
-    root_node.Leftist_node<Type>::clear();
+    root_node->Leftist_node<Type>::clear();
     
     // Reset the root node and heap size.
     root_node = nullptr;
