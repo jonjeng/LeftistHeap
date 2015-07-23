@@ -137,8 +137,10 @@ void Leftist_node<Type>::push(Leftist_node<Type> *heap_to_insert, Leftist_node<T
 template <typename Type>
 void Leftist_node<Type>::clear() {
     // Call clear on the left sub-tree and then on the right and then delete this.
-    left_tree->clear();
-    right_tree->clear();
+    if (left_tree)
+        left_tree->clear();
+    if (right_tree)
+        right_tree->clear();
     delete this;
 }
 
