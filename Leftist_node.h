@@ -40,7 +40,6 @@ class Leftist_node {
 		void push( Leftist_node *, Leftist_node *& );
 		void clear();
     
-    friend class Leftist_heap<Type>
 };
 
 template <typename Type>
@@ -63,17 +62,17 @@ bool Leftist_node<Type>::empty() const {
 }
 
 template <typename Type>
-Leftist_node* Leftist_node<Type>::left() const {
+Leftist_node<Type>* Leftist_node<Type>::left() const {
     return left_tree;
 }
 
 template <typename Type>
-Leftist_node* Leftist_node<Type>::right() const {
+Leftist_node<Type>* Leftist_node<Type>::right() const {
     return right_tree;
 }
 
 template <typename Type>
-int Leftist_node<Type>::count(const type &subj) const {
+int Leftist_node<Type>::count(const Type &subj) const {
     // Return the number of instances of the argument in this sub-tree. (O(n))
     
     int count = 0;
@@ -89,81 +88,57 @@ int Leftist_node<Type>::count(const type &subj) const {
 
 template <typename Type>
 int Leftist_node<Type>::null_path_length() const {
-    // If this is a nullptr, return -1
-    if (this == nullptr)
-        return -1;
-    
     return heap_null_path_length;
 }
 
 template <typename Type>
-void Leftist_node<Type>::push(Leftist_node *heap_to_insert, Leftist_node *&ptr_to_this) const {
-    /*// Only one node can be inserted at a time
-    if (heap_to_insert->heap_null_path_length > 0) {
-        std::cout << "Error: only one node can be inserted at a time\n";
-        return;
-    }*/
-    
+void Leftist_node<Type>::push(Leftist_node<Type> *heap_to_insert, Leftist_node<Type> *&ptr_to_this) {
     // If the heap to insert is null, return.
     if (heap_to_insert == nullptr)
         return;
     
-    // Otherwise, insert the heap
-    if (this == nullptr) {
-        this = heap_to_insert;
+    // Otherwise, the heap to insert into is empty. Insert accordingly
+    else if (ptr_to_this == nullptr) {
+        ptr_to_this = heap_to_insert;
+        return;
     }
+    
+    // Otherwise, the heap to insert into is not empty. Insert accordingly
     
     // If the smallest element in the original heap (ptr_to_this), recursively merge right subtree of original heap with new heap (heap_to_insert)
     else if (ptr_to_this->element <= heap_to_insert->element) {
-        Leftist_node<Type> curr = ptr_to_this;
-        while (curr->right_tree != nullptr)
-            curr = curr->right_tree;
-        curr->right_tree = heap_to_insert;
-        curr->right_tree->heap_null_path_length + heap_to_insert->null_path_length + 1;
+        ptr_to_this->right_tree->push(heap_to_insert, ptr_to_this->right_tree);
+        ptr_to_this->right_tree->heap_null_path_length = heap_to_insert->heap_null_path_length + 1;
         
-        // Check if right subtree of curr has larger null path length than left subtree. If so, then swap right tree and left tree.
-        if (curr->left_tree) {
-            if (curr->right_tree->heap_null_path_length > curr->left_tree->heap_null_path_length)
-                std::swap(curr->right_tree, curr->left_tree);
+        // Update the node's null path length
+        if (ptr_to_this->left_tree && ptr_to_this->right_tree) {
+            ptr_to_this->heap_null_path_length = 1 + std::min(ptr_to_this->right_tree->heap_null_path_length, ptr_to_this->left_tree->heap_null_path_length);
         }
+        else // If the node only has one child, it has a null path length of 0
+            ptr_to_this->heap_null_path_length = 0;
         
-        // Check if right subtree of root node has larger null path length than left subtree. If so, then swap right tree and left tree.
+        // Recursively check if the right subtree of the node has larger null path length than the left subtree. If so, then swap the two
         if (ptr_to_this->left_tree) {
-            if (ptr_to_this->right_tree->heap_null_path_length > ptr_to_this->left_tree->heap_null_path_length)
+            if (ptr_to_this->right_tree->heap_null_path_length > ptr_to_this->left_tree->heap_null_path_length) {
                 std::swap(ptr_to_this->right_tree, ptr_to_this->left_tree);
+            }
         }
+        
     }
     
-    // if smallest element is in the new heap (heap_to_insert), recursively merge right subtree of new heap with original heap (ptr_to_this)
+    // if smallest element is in the new heap (heap_to_insert), recursively merge it with the original heap (ptr_to_this)
     else if (heap_to_insert->element < ptr_to_this->element) {
-        Leftist_node<Type> curr = heap_to_insert;
-        while (curr->right_tree != nullptr)
-            curr = curr->right_tree;
-        curr->right_tree = ptr_to_this;
-        curr->right_tree->heap_null_path_length + heap_to_insert->null_path_length + 1;
-        
-        // If the curr's right subtree has larger null path length than its left subtree, swap the right subtree with its left subtree
-        if (curr->left_tree) {
-            if (curr->right_tree->heap_null_path_length > curr->left_tree->heap_null_path_length)
-                std::swap(curr->right_tree, curr->left_tree);
-        }
-        
-        // Check if right subtree of root node has larger null path length than left subtree. If so, then swap right tree and left tree.
-        if (heap_to_insert->left_tree) {
-            if (heap_to_insert->right_tree->heap_null_path_length > heap_to_insert->left_tree->heap_null_path_length)
-                std::swap(heap_to_insert->right_tree, heap_to_insert->left_tree);
-        }
+        heap_to_insert->push(ptr_to_this, heap_to_insert);
     }
     
 }
 
+
 template <typename Type>
-void Leftist_node<Type>::clear() const {
-    // If this is nullptr, return
-    if (this == nullptr) return;
+void Leftist_node<Type>::clear() {
     // Call clear on the left sub-tree and then on the right and then delete this.
-    left_tree.clear();
-    right_tree.clear();
+    left_tree->clear();
+    right_tree->clear();
     delete this;
 }
 
