@@ -73,6 +73,7 @@ heap_size( heap.heap_size ) {
     else if (heap.heap_size == 1) {
         root_node = heap.root_node;
     }
+    
     // Copy heap parameter into an array (arrayCopy) by breadth-first traversal
     else {
         /*
@@ -96,9 +97,7 @@ heap_size( heap.heap_size ) {
                 queueCopy.enqueue(curr->right());
             }
         }
-        
     }
-    
 }
 
 template <typename Type>
@@ -161,7 +160,7 @@ int Leftist_heap<Type>::count(const Type &subj) const {
     // Make use of Leftist_node<Type>::count(const type &subj) to traverse the subtrees accordingly.
     count += root_node->left()->count(subj);
     count += root_node->right()->count(subj);
-    return false;
+    return count;
 }
 
 template <typename Type>
@@ -176,17 +175,6 @@ void Leftist_heap<Type>::push(const Type &obj) {
 
 template <typename Type>
 Type Leftist_heap<Type>::pop() {
-    // Remove root, leaving two subtrees (root's left_tree and right_tree).
-            // Merge the two trees - find the subtree with the min element (which subtree's root node is smaller).
-                // Recursively merge the right subtree (tree x) of the heap (that has the smallest element) with the rightmost element of the left heap. (place the rightmost element (node n) of the other tree into tree x)
-                // Check if tree x's left subtree has a null path length at least as large as the right subtree. Swap right_tree and left_tree if it doesn't. Connect tree x to be the right child of the tree that originally contained node x
-                // Check if left subtree has a null pat length at least as large as the right subtree. Swap right_tree and left_tree if it doesn't.
-                // Connect this heap to tree x as its new right child
-                // Check if tree x's left subtree has a null path length at least as large as the right subtree. Swap right_tree and left_tree if it doesn't
-    
-
-    
-    
     // Pop the least element in the heap and delete its node. If the tree is empty, this function throws an underflow exception. Otherwise, the left sub-tree of the root node is made the root node and the right-sub tree of the original root node is pushed into the new root node. Return the element in the popped node and decrement the heap size. (O(ln(n)))
     
     // If the heap is size 0, no elements can be popped so throw an underflow exception.
@@ -195,25 +183,18 @@ Type Leftist_heap<Type>::pop() {
         throw underflow();
     // } catch { std::cout << "Error: the heap is empty. No elements can be popped.\n"; return; }
     
-    // If the heap has size 1, call clear()
-    if (heap_size == 1) {
-        Type result = root_node->retrieve();
-        Leftist_heap<Type>::clear();
-        return result;
-    }
-    
-    // Otherwise, the heap has size greater than 1
-    Leftist_node<Type> *leftChild = root_node->left();
-    Leftist_node<Type> *rightChild = root_node->right();
-    
+    // Otherwise, pop the least element in the heap
     Type result = root_node->retrieve();
-    delete root_node;
+    Leftist_node<Type> * temp = root_node;
     
     // The left sub-tree of the root node is made the root node (note: not the subtree with the min element?)
-    root_node = leftChild;
+    root_node = temp->left();
     
     // The right-subtree of the original root node is pushed into the new root node
-    root_node->push(rightChild, root_node);
+    if (temp->right())
+        root_node->push(temp->right(), root_node);
+    
+    delete temp;
     
     // Decrement heap_size to reflect the poppinng
     heap_size--;
@@ -225,7 +206,7 @@ Type Leftist_heap<Type>::pop() {
 template <typename Type>
 void Leftist_heap<Type>::clear() {
     if (heap_size == 0)
-        std::cout << "Error: can't clear an empty heap!\n";
+        return;
     
     else {
         // Call clear on the root node
