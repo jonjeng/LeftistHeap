@@ -164,18 +164,9 @@ int Leftist_heap::count(const Type &subj) const {
 
 template <typename Type>
 void Leftist_heap::push(const Type &obj) {
-    
-    /******************************************************
-     
-     MUST FIX
-     ******************************************************/
-    
     // Insert the new element into the heap by creating a new leftist node and calling push on the root node using root_node as a second argument.
-    Leftist_node<Type> *new_node = new Leftist_node<Type>;
-    new_node.push(obj, root_node);
-    //
-    //calling obj is new_node - does code have to change to reflect this?
-    //
+    Leftist_node<Type> *new_node = new Leftist_node<Type>(obj);
+    root_node.push(new_node, root_node);
     
     // Increment the heap size.
     heap_size++;
@@ -183,12 +174,18 @@ void Leftist_heap::push(const Type &obj) {
 
 template <typename Type>
 Type Leftist_heap::pop() {
-    // Pop the least element in the heap and delete its node. If the tree is empty, this function throws an underflow exception. Otherwise, the left sub-tree of the root node is made the root node and the right-sub tree of the original root node is pushed into the new root node. Return the element in the popped node and decrement the heap size. (O(ln(n)))
+    // Remove root, leaving two subtrees (root's left_tree and right_tree).
+            // Merge the two trees - find the subtree with the min element (which subtree's root node is smaller).
+                // Recursively merge the right subtree (tree x) of the heap (that has the smallest element) with the rightmost element of the left heap. (place the rightmost element (node n) of the other tree into tree x)
+                // Check if tree x's left subtree has a null path length at least as large as the right subtree. Swap right_tree and left_tree if it doesn't. Connect tree x to be the right child of the tree that originally contained node x
+                // Check if left subtree has a null pat length at least as large as the right subtree. Swap right_tree and left_tree if it doesn't.
+                // Connect this heap to tree x as its new right child
+                // Check if tree x's left subtree has a null path length at least as large as the right subtree. Swap right_tree and left_tree if it doesn't
     
-    /******************************************************
-     
-     ASSUMES ORDERED BST - MUST REVISE IF INVALID
-     ******************************************************/
+
+    
+    
+    // Pop the least element in the heap and delete its node. If the tree is empty, this function throws an underflow exception. Otherwise, the left sub-tree of the root node is made the root node and the right-sub tree of the original root node is pushed into the new root node. Return the element in the popped node and decrement the heap size. (O(ln(n)))
     
     // If the heap is size 0, no elements can be popped so throw an underflow exception.
     // try {
@@ -203,38 +200,23 @@ Type Leftist_heap::pop() {
         return result;
     }
     
-    // Otherwise, the heap has size greater than 1.
-    int height = std::ceil(std::log2(heap_size));
-    
-    // Traverse to the parent of the rightmost leaf
-    Leftist_node<Type> *curr = root_node;
-    Leftist_node<Type> *parent = root_node;
-    while(curr->null_path_length() > 1) {
-        parent = curr;
-        if (curr->right_tree->null_path_length() >= curr->left_tree->null_path_length())
-            curr = curr->right_tree;
-        else /* if (curr->left_tree->null_path_length() > curr->right_tree->null_path_length()) */
-            curr = curr->left_tree;
-    }
-    parent = curr;
-    if (curr->right_tree != nullptr) // The rightmost leaf is the right child of its parent
-        curr = curr->right_tree;
-    else // The rightmost leaf is the left child of its parent
-        curr = curr->left_tree
-    
-    // Delete the node and update its parent
-    int result = curr->retrieve();
-    delete curr;
-    parent->left_node = nullptr;
-    
+    // Otherwise, the heap has size greater than 1
     Leftist_node<Type> *leftChild = root_node->left_tree;
     Leftist_node<Type> *rightChild = root_node->right_tree;
     
-    // The left sub-tree of the root node is made the root node and the right-sub tree of the original root node is pushed into the new root node.
+    Type result = root_node->retrieve();
+    delete root_node;
     
-        // This should only be done if the root node (greatest element) is popped, so it's unnecessary/irrelevant, right?
+    // The left sub-tree of the root node is made the root node (note: not the subtree with the min element?)
+    root_node = leftChild;
     
-    // std::ceil(std::log(heap_size))
+    // The right-subtree of the original root node is pushed into the new root node
+    root_node.push(rightChild, root_node);
+    
+    // Decrement heap_size to reflect the poppinng
+    heap_size--;
+    
+    // Return the element in the popped node
     return result;
 }
 
