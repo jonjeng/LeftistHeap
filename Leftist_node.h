@@ -106,33 +106,31 @@ void Leftist_node<Type>::push(Leftist_node<Type> *heap_to_insert, Leftist_node<T
     // Otherwise, the heap to insert into is not empty. Insert accordingly
     
     // If the smallest element in the original heap (ptr_to_this), recursively merge right subtree of original heap with new heap (heap_to_insert)
-    else if (ptr_to_this->element <= heap_to_insert->element) {
+    if (ptr_to_this->element <= heap_to_insert->element) {
         ptr_to_this->right_tree->push(heap_to_insert, ptr_to_this->right_tree);
         ptr_to_this->right_tree->heap_null_path_length = heap_to_insert->heap_null_path_length + 1;
-        
-        // Update the node's null path length
-        if (ptr_to_this->left_tree && ptr_to_this->right_tree) {
-            ptr_to_this->heap_null_path_length = 1 + std::min(ptr_to_this->right_tree->heap_null_path_length, ptr_to_this->left_tree->heap_null_path_length);
-        }
-        else // If the node only has one child, it has a null path length of 0
-            ptr_to_this->heap_null_path_length = 0;
-        
-        // Recursively check if the right subtree of the node has larger null path length than the left subtree. If so, then swap the two
+    
+        // Recursively check if the right subtree of the node has larger null path length than the left subtree. If so, then swap the two and update the null path length
         if (ptr_to_this->left_tree) {
             if (ptr_to_this->right_tree->heap_null_path_length > ptr_to_this->left_tree->heap_null_path_length) {
                 std::swap(ptr_to_this->right_tree, ptr_to_this->left_tree);
+                ptr_to_this->heap_null_path_length = 1 + ptr_to_this->left_tree->heap_null_path_length;
             }
+            else
+                ptr_to_this->heap_null_path_length = 1 + ptr_to_this->right_tree->heap_null_path_length;
         }
-        
+        else {
+            ptr_to_this->heap_null_path_length = 0;
+            std::swap(ptr_to_this->left_tree, ptr_to_this->right_tree);
+        }
     }
-    
+
     // if smallest element is in the new heap (heap_to_insert), recursively merge it with the original heap (ptr_to_this)
     else if (heap_to_insert->element < ptr_to_this->element) {
-        heap_to_insert->push(ptr_to_this, heap_to_insert);
+        ptr_to_this = heap_to_insert;
+        heap_to_insert->push(this, heap_to_insert);
     }
-    
 }
-
 
 template <typename Type>
 void Leftist_node<Type>::clear() {
