@@ -224,12 +224,17 @@ Type Leftist_heap<Type>::pop() {
 
 template <typename Type>
 void Leftist_heap<Type>::clear() {
-    // Call clear on the root node
-    root_node->Leftist_node<Type>::clear();
+    if (heap_size == 0)
+        std::cout << "Error: can't clear an empty heap!\n";
     
-    // Reset the root node and heap size.
-    root_node = nullptr;
-    heap_size = 0;
+    else {
+        // Call clear on the root node
+        root_node->clear();
+        
+        // Reset the root node and heap size.
+        root_node = nullptr;
+        heap_size = 0;
+    }
 }
 
 template <typename T>
