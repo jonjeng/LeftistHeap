@@ -1,5 +1,5 @@
 /*****************************************
- Project 1 - CIS 22C
+ Project 3 - CIS 22C
  
  * Contributors:
  * Evan Finnigan
@@ -105,31 +105,27 @@ void Leftist_node<Type>::push(Leftist_node<Type> *heap_to_insert, Leftist_node<T
     
     // Otherwise, the heap to insert into is not empty. Insert accordingly
     
-    // If the smallest element in the original heap (ptr_to_this), recursively merge right subtree of original heap with new heap (heap_to_insert)
-    if (ptr_to_this->element <= heap_to_insert->element) {
-        ptr_to_this->right_tree->push(heap_to_insert, ptr_to_this->right_tree);
-        ptr_to_this->right_tree->heap_null_path_length = heap_to_insert->heap_null_path_length + 1;
+    // If the heap to insert has a smaller value than the least element of the heap to be inserted into, the heap to insert should be made the heap to be inserted into and vice versa
+    if (heap_to_insert->element < ptr_to_this->element)
+        std::swap(ptr_to_this, heap_to_insert);
     
-        // Recursively check if the right subtree of the node has larger null path length than the left subtree. If so, then swap the two and update the null path length
-        if (ptr_to_this->left_tree) {
-            if (ptr_to_this->right_tree->heap_null_path_length > ptr_to_this->left_tree->heap_null_path_length) {
-                std::swap(ptr_to_this->right_tree, ptr_to_this->left_tree);
-                ptr_to_this->heap_null_path_length = 1 + ptr_to_this->left_tree->heap_null_path_length;
-            }
-            else
-                ptr_to_this->heap_null_path_length = 1 + ptr_to_this->right_tree->heap_null_path_length;
-        }
-        else {
-            ptr_to_this->heap_null_path_length = 0;
+    // If the root of the heap to be inserted into has no children, the heap to insert should be inserted as its left child
+    if (ptr_to_this->right_tree == nullptr)
+        if (ptr_to_this->left_tree == nullptr)
+            ptr_to_this->left_tree = heap_to_insert;
+    // If the root of the heap to be insered into has a left child, the heap to insert should be inserted as its right child
+        else ptr_to_this->right_tree = heap_to_insert;
+    // Otherwise, recursively insert the heap into the right child position (everything subsequent also occurs recursively if applicable
+    else (push(heap_to_insert, ptr_to_this->right_tree));
+    
+    // If the heap's left tree has a null path length lower than that of the right tree, swap them
+    if (ptr_to_this->left_tree && ptr_to_this->right_tree)
+        if (ptr_to_this->left_tree->heap_null_path_length < ptr_to_this->right_tree->heap_null_path_length)
             std::swap(ptr_to_this->left_tree, ptr_to_this->right_tree);
-        }
-    }
-
-    // if smallest element is in the new heap (heap_to_insert), recursively merge it with the original heap (ptr_to_this)
-    else if (heap_to_insert->element < ptr_to_this->element) {
-        ptr_to_this = heap_to_insert;
-        heap_to_insert->push(this, heap_to_insert);
-    }
+    
+    // Update the node's null path length
+    if (ptr_to_this->right_tree)
+        ptr_to_this->heap_null_path_length = ptr_to_this->right_tree->heap_null_path_length + 1;
 }
 
 template <typename Type>
