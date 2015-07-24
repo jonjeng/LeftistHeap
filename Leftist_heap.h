@@ -1,5 +1,5 @@
 /*****************************************
- Project 1 - CIS 22C
+ Project 3 - CIS 22C
  
  * Contributors:
  * Evan Finnigan
